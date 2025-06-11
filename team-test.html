@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Team Functionality Test</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      padding: 2rem;
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+    h1 {
+      color: #2563eb;
+      margin-bottom: 1.5rem;
+    }
+    pre {
+      background-color: #1e293b;
+      color: #e2e8f0;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      overflow: auto;
+    }
+    .status {
+      padding: 0.5rem 1rem;
+      border-radius: 0.25rem;
+      display: inline-block;
+      margin-bottom: 1rem;
+    }
+    .success {
+      background-color: #dcfce7;
+      color: #166534;
+    }
+    .error {
+      background-color: #fee2e2;
+      color: #b91c1c;
+    }
+    .actions {
+      margin-top: 2rem;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 0.25rem;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    button:hover {
+      background-color: #1d4ed8;
+    }
+    .loading {
+      display: inline-block;
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 0.5rem;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <h1>Team Functionality Test</h1>
+  
+  <div id="status-container"></div>
+  
+  <pre id="results">Click "Run Test" to start the team functionality test.</pre>
+  
+  <div class="actions">
+    <button id="run-test">Run Test</button>
+  </div>
+  
+  <script type="module">
+    import { testTeamFunctionality } from './test-team-functionality.ts';
+    
+    document.getElementById('run-test').addEventListener('click', async () => {
+      const button = document.getElementById('run-test');
+      const resultsEl = document.getElementById('results');
+      const statusContainer = document.getElementById('status-container');
+      
+      // Disable button and show loading
+      button.disabled = true;
+      button.innerHTML = '<span class="loading"></span>Running...';
+      statusContainer.innerHTML = '';
+      resultsEl.textContent = 'Running test...';
+      
+      try {
+        const result = await testTeamFunctionality();
+        
+        // Show results
+        resultsEl.textContent = JSON.stringify(result, null, 2);
+        
+        // Show status
+        if (result.success) {
+          statusContainer.innerHTML = '<div class="status success">Test completed successfully</div>';
+        } else {
+          statusContainer.innerHTML = '<div class="status error">Test failed</div>';
+        }
+      } catch (error) {
+        resultsEl.textContent = error instanceof Error ? 
+          `${error.message}\n\n${error.stack}` : 
+          String(error);
+        statusContainer.innerHTML = '<div class="status error">Test error</div>';
+      } finally {
+        // Re-enable button
+        button.disabled = false;
+        button.innerHTML = 'Run Test Again';
+      }
+    });
+  </script>
+</body>
+</html>

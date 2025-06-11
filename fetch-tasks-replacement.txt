@@ -1,0 +1,77 @@
+// Replace your existing fetchTasks implementation with this code:
+
+fetchTasks: (() => {
+  // Closure variables to maintain state between function calls
+  let retryCount = 0;
+  let hasShownError = false;
+  
+  // Return the actual function
+  return async () => {
+    try {
+      // If we've reached max retries, don't try again
+      if (retryCount >= 3) {
+        console.log('Max retry attempts reached for task fetching');
+        return [];
+      }
+      
+      // Validate session before making any requests
+      const user = useUserStore.getState().user;
+      
+      // Check if user exists before validating session
+      if (!user || !user.id) {
+        console.log('No user found in store, skipping task fetch');
+        return [];
+      }
+      
+      const isValid = await useUserStore.getState().validateSession();
+      if (!isValid) {
+        console.log('User session invalid, skipping task fetch');
+        return [];
+      }
+
+      // Get user ID once to avoid multiple calls
+      const userId = useUserStore.getState().user.id;
+      
+      // Fixed query to use correct foreign key relationship as suggested by the error
+      const { data: tasks, error } = await supabase
+        .from('tasks')
+        .select(`
+          *,
+          team_member_users!tasks_team_id_fkey (
+            team_id,
+            role
+          )
+        `)
+        .or(`created_by.eq.${userId},assigned_to.eq.${userId},team_id.not.is.null`);
+
+      if (error) throw error;
+
+      const formattedTasks = tasks.map((task: any) => ({
+        ...task,
+        createdAt: new Date(task.created_at),
+        dueDate: task.due_date ? new Date(task.due_date) : null,
+        completedAt: task.completed_at ? new Date(task.completed_at) : undefined,
+      }));
+
+      // Success! Reset error states
+      retryCount = 0;
+      hasShownError = false;
+      
+      set({ tasks: formattedTasks });
+      return formattedTasks;
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+      
+      // Increment retry count
+      retryCount++;
+      
+      // Only show toast once
+      if (!hasShownError) {
+        toast.error(`Failed to fetch tasks${retryCount > 1 ? ` (attempt ${retryCount}/3)` : ''}`);
+        hasShownError = true;
+      }
+      
+      return [];
+    }
+  };
+})(),
