@@ -1,0 +1,17 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "Test loadAllApplicationData",
+			"command": "node",
+			"args": [
+				"-e",
+				"import('./src/lib/fixDataDisplayErrors').then(({ loadAllApplicationData, diagnoseStoreData }) => { loadAllApplicationData().then(result => console.log('Load Result:', result)); console.log('Diagnostics:', diagnoseStoreData()); });"
+			],
+			"problemMatcher": [],
+			"group": "test",
+			"isBackground": false
+		}
+	]
+}

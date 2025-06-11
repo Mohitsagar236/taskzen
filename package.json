@@ -1,0 +1,9 @@
+{
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test:load": "npm run build && node dist/testLoadData.js"
+  }
+}
